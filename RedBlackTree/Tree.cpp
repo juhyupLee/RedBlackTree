@@ -3,6 +3,8 @@
 #include <iostream>
 #include <Windows.h>
 #include "DrawingNodeObject.h"
+#include "MemoryTracer.h"
+
 
 void RedBlackTree::TraverseNPrint(Node* node)
 {
@@ -22,11 +24,16 @@ void RedBlackTree::TraverseNPrint2(Node* node, int x, int y, int parentX, int pa
     {
         return;
     }
+    if (node == m_Nill)
+    {
+        return;
+    }
 
     DrawingNodeObject* pObject = new DrawingNodeObject(x, y, node->data, parentX,parentY,node);
     
-    
-    width = (int)(width * 0.7);
+    //delete pObject;
+
+    width = (int)(width * 0.5);
     height +=(int)( height * 0.1);
         
     TraverseNPrint2(node->left, x - width, y + height, x,y, width, height);
@@ -39,80 +46,15 @@ void RedBlackTree::TraverseNRelease(Node* node)
     {
         return;
     }
+    if (node == m_Nill)
+    {
+        return;
+    }
     TraverseNRelease(node->left);
     TraverseNRelease(node->right);
     delete node;
 }
 
-//bool RedBlackTree::InsertNode(int data)
-//{
-//    if (m_RootNode == nullptr)
-//    {
-//        m_RootNode = new Node;
-//        m_RootNode->data = data;
-//        m_RootNode->left = nullptr;
-//        m_RootNode->right = nullptr;
-//        m_RootNode->parent = nullptr;
-//
-//        m_NodeCount++;
-//        return true;
-//    }
-//    else
-//    {
-//        Node* curNode = m_RootNode;
-//        Node* parentNode = nullptr;
-//        bool bRight = true;
-//
-//        while (true)
-//        {
-//            //------------------------------------
-//            // 루트노드보다 작을때 (Left)
-//            //------------------------------------
-//            if (curNode->data > data)
-//            {
-//                parentNode = curNode;
-//                curNode = curNode->left;
-//                if (curNode == nullptr)
-//                {
-//                    curNode = new Node;
-//                    curNode->data = data;
-//                    curNode->left = nullptr;
-//                    curNode->right = nullptr;
-//                    curNode->parent = parentNode;
-//                    parentNode->left = curNode;
-//                    m_NodeCount++;
-//                    return true;
-//                }
-//            }
-//            //------------------------------------
-//            // 루트노드보다 클 때 (Right)
-//            //------------------------------------
-//            else if (curNode->data < data)
-//            {
-//                parentNode = curNode;
-//                curNode = curNode->right;
-//                if (curNode == nullptr)
-//                {
-//                    curNode = new Node;
-//                    curNode->data = data;
-//                    curNode->left = nullptr;
-//                    curNode->right = nullptr;
-//                    curNode->parent = parentNode;
-//                    parentNode->right = curNode;
-//                    m_NodeCount++;
-//                    return true;
-//                }
-//            }
-//            else
-//            {
-//                return false;
-//            }
-//        }
-//
-//        m_NodeCount++;
-//    }
-//    return true;
-//}
 bool RedBlackTree::InsertNode(int data)
 {
     if (m_RootNode == nullptr)
@@ -150,51 +92,21 @@ bool RedBlackTree::InsertNode(int data)
                     curNode->left = m_Nill;
                     curNode->right = m_Nill;
                     curNode->color = NODE_COLOR::RED;
+                    parentNode->left = curNode;
 
                     //----------------------------------------------------------
                     // 부모노도의 색이 블랙이냐,레드냐에따라 분기 나뉨.
                     //----------------------------------------------------------
                     if (curNode->parent->color == NODE_COLOR::BLACK)
                     {
-                        parentNode->left = curNode;
                         return true;
                     }
                     else
                     {
-                        Node* parent = parentNode;
-                        Node* grandFather = parentNode->parent;
-                        Node* uncle = nullptr;
-                        parent->left = curNode;
-
-                        if (grandFather->left == parentNode)
-                        {
-                            uncle = grandFather->right;
-                        }
-                        else
-                        {
-                            uncle = grandFather->left;
-                        }
-
-                        //----------------------------------------------------------
-                        // 삼촌노노드의 색이 레드냐 블랙이냐에 따라 분기 나뉨.
-                        //----------------------------------------------------------
-                        if (uncle->color == NODE_COLOR::RED)
-                        {
-                            grandFather->color = NODE_COLOR::RED;
-                            parent->color = NODE_COLOR::BLACK;
-                            uncle->color = NODE_COLOR::BLACK;
-
-                            RedUncleProcess(grandFather);
-
-                        }
-                        else
-                        {
-                           
-                            BlackUncleProcess(curNode);
-                        }
+                        BalanceTree(curNode, LEFT);
                     }
 
-                    parentNode->left = curNode;
+                   
                     m_NodeCount++;
                     return true;
                 }
@@ -211,11 +123,20 @@ bool RedBlackTree::InsertNode(int data)
                     curNode = new Node;
                     curNode->data = data;
                     curNode->parent = parentNode;
-                    curNode->left = nullptr;
-                    curNode->right = nullptr;
+                    curNode->left = m_Nill;
+                    curNode->right = m_Nill;
+                    curNode->color = NODE_COLOR::RED;
                     parentNode->right = curNode;
                     m_NodeCount++;
-                    return true;
+
+                    if (curNode->parent->color == NODE_COLOR::BLACK)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        BalanceTree(curNode, RIGHT);
+                    }
                 }
             }
             else
@@ -350,7 +271,7 @@ void RedBlackTree::Print()
 void RedBlackTree::PrintTree()
 {
 
-    TraverseNPrint2(m_RootNode,600,50,0,0,300,60);
+    TraverseNPrint2(m_RootNode,750,50,0,0,400,60);
 
 }
 
@@ -360,13 +281,16 @@ void RedBlackTree::TestRotate()
     RotateRight(m_RootNode->left);
 }
 
-bool RedBlackTree::RedUncleProcess(Node* node)
+bool RedBlackTree::BalanceTree(Node* node,int direction)
 {
-    Node* parent = node->parent;
-    if (parent == nullptr)
+    if (node == m_RootNode)
     {
+        node->color = NODE_COLOR::BLACK;
         return true;
     }
+
+    Node* parent = node->parent;
+
     if (parent->color == NODE_COLOR::BLACK)
     {
         return true;
@@ -389,37 +313,67 @@ bool RedBlackTree::RedUncleProcess(Node* node)
         uncle->color = NODE_COLOR::BLACK;
         grandParent->color = NODE_COLOR::RED;
 
-        RedUncleProcess(grandParent);
+        BalanceTree(grandParent, direction);
     }
     else
     {
-        BlackUncleProcess(node);
+        if (grandParent->left == parent)
+        {
+            BlackUncleProcess(node, LEFT);
+        }
+        else if (grandParent->right == parent)
+        {
+            BlackUncleProcess(node, RIGHT);
+        }
+       
     }
 
     return false;
 }
 
-bool RedBlackTree::BlackUncleProcess(Node* node)
+bool RedBlackTree::BlackUncleProcess(Node* node, int direction)
 {
     Node* parent = node->parent;
     Node* grandParent = parent->parent;
 
-    if (parent->left == node)
+    if (direction == LEFT)
     {
-        RotateRight(grandParent);
-        parent->color = NODE_COLOR::BLACK;
-        grandParent->color = NODE_COLOR::RED;
+        if (parent->left == node)
+        {
+            RotateRight(grandParent);
+            parent->color = NODE_COLOR::BLACK;
+            grandParent->color = NODE_COLOR::RED;
 
+        }
+        else if (parent->right == node)
+        {
+            RotateLeft(parent);
+            RotateRight(grandParent);
+
+            node->color = NODE_COLOR::BLACK;
+            grandParent->color = NODE_COLOR::RED;
+        }
     }
-    else if (parent->right == node)
+    else
     {
-        RotateLeft(parent);
-        RotateRight(grandParent);
+        if (parent->right == node)
+        {
+            RotateLeft(grandParent);
+            parent->color = NODE_COLOR::BLACK;
+            grandParent->color = NODE_COLOR::RED;
 
-        node->color = NODE_COLOR::BLACK;
-        grandParent->color = NODE_COLOR::RED;
+        }
+        else if (parent->left == node)
+        {
+            RotateRight(parent);
+            RotateLeft(grandParent);
+
+            node->color = NODE_COLOR::BLACK;
+            grandParent->color = NODE_COLOR::RED;
+        }
     }
-    return false;
+    
+    return true;
 }
 
 //void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)

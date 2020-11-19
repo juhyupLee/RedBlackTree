@@ -9,6 +9,7 @@
 #include "Tree.h"
 
 #define MAX_LOADSTRING 100
+#define ARRAY_SIZE 20
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -51,8 +52,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     bool bFirst = true;
 
-  
+    int arr[ARRAY_SIZE];
+    int size = 20;
+    srand(10);
 
+    for (size_t i = 0; i < ARRAY_SIZE; i++)
+    {
+        arr[i] = i;
+    }
+
+    for (size_t i = 0; i < ARRAY_SIZE; i++)
+    {
+        int randIndex1 = rand() % ARRAY_SIZE;
+        int temp = arr[randIndex1];
+
+        int randIndex2= rand() % ARRAY_SIZE;
+        arr[randIndex1] = arr[randIndex2];
+        arr[randIndex2] = temp;
+    }
     // 기본 메시지 루프입니다:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -65,35 +82,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                 bFirst = false;
                 RedBlackTree Tree;
 
-                Tree.InsertNode(50);
-                Tree.InsertNode(30);
-                Tree.InsertNode(10);
-             /*   Tree.InsertNode(50);
-                Tree.InsertNode(30);
-                Tree.InsertNode(80);
-                Tree.InsertNode(20);
-                Tree.InsertNode(40);
-                Tree.InsertNode(70);
-                Tree.InsertNode(100);
-                Tree.InsertNode(10);
-                Tree.InsertNode(39);
-                Tree.InsertNode(37);
-                Tree.InsertNode(35);
-                Tree.InsertNode(33);
-                Tree.InsertNode(31);
-                Tree.InsertNode(34);*/
-
-                //Tree.TestRotate();
-                //Tree.DeleteNode(30);
-                //Tree.DeleteNode(50);
-                //Tree.DeleteNode(39);
-                //Tree.DeleteNode(33);
-                //
-                //Tree.DeleteNode(77);
-                //Tree.InsertNode(75);
-                //Tree.DeleteNode(70);
-                //Tree.DeleteNode(37);
-                //Tree.DeleteNode(31);
+                for (size_t i = 0; i < ARRAY_SIZE; i++)
+                {
+                    if (arr[i] == 11)
+                    {
+                        int a = 10;
+                    }
+                    Tree.InsertNode(arr[i]);
+                }
+     
                 Tree.PrintTree();
             }
     }

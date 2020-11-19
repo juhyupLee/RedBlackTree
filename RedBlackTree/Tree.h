@@ -7,6 +7,11 @@ public:
 		BLACK = 0,
 		RED
 	};
+	enum
+	{
+		LEFT  =0,
+		RIGHT
+	};
 	struct Node
 	{
 		int data;
@@ -30,13 +35,13 @@ public:
 	~RedBlackTree()
 	{
 		TraverseNRelease(m_RootNode);
+		delete m_Nill;
 		m_NodeCount = 0;
 	}
 public:
 	void TraverseNPrint(Node* node);
 	void TraverseNPrint2(Node* node,int x, int y,int parentX, int parentY, int width, int height);
 	void TraverseNRelease(Node* node);
-	//bool InsertNode(int data);
 	bool InsertNode(int data);
 //	void DeleteNode(int data);
 
@@ -49,8 +54,8 @@ public:
 	void TestRotate();
 	//void TraverseDelete(Node* node, Node* parent, int data);
 private:
-	bool RedUncleProcess(Node* node);
-	bool BlackUncleProcess(Node* node);
+	bool BalanceTree(Node* node,int direction);
+	bool BlackUncleProcess(Node* node, int direction);
 private:
 	Node* m_RootNode;
 	int32_t m_NodeCount;
