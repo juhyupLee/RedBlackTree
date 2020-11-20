@@ -43,18 +43,19 @@ public:
 	void TraverseNPrint2(Node* node,int x, int y,int parentX, int parentY, int width, int height);
 	void TraverseNRelease(Node* node);
 	bool InsertNode(int data);
-//	void DeleteNode(int data);
+	void DeleteNode(int data);
 
 	bool RotateLeft(Node* node);
 	bool RotateRight(Node* node);
 
 	void Print();
-	void PrintTree();
+	void PrintTree(int32_t x, int32_t y);
 
 	void TestRotate();
-	//void TraverseDelete(Node* node, Node* parent, int data);
+	void TraverseDelete(Node* node, Node* parent, int data);
 private:
-	bool BalanceTree(Node* node,int direction);
+	bool BalanceInsertTree(Node* node,int direction);
+	bool BalanceDeleteTree(Node* node);
 	bool BlackUncleProcess(Node* node, int direction);
 private:
 	Node* m_RootNode;

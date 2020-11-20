@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="GlobalVariable.h" />
+    <ClInclude Include="LogManager.h" />
     <ClInclude Include="MemoryTracer.h" />
     <ClInclude Include="RedBlackTree.h" />
     <ClInclude Include="Resource.h" />
@@ -149,6 +150,7 @@
     <ClInclude Include="DrawingNodeObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="MemoryTracer.cpp" />
     <ClCompile Include="RedBlackTree.cpp" />
     <ClCompile Include="Tree.cpp" />

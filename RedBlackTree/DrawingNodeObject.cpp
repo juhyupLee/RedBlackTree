@@ -40,10 +40,13 @@ DrawingNodeObject::DrawingNodeObject(int32_t x, int32_t y, int data, int32_t par
 	}
 	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
 
+	
 	Ellipse(hdc, m_X - NODE_RADI, m_Y - NODE_RADI, m_X + NODE_RADI, m_Y + NODE_RADI);
 	SelectObject(hdc, oldBrush);
+
 	TextOut(hdc, x-10, y-10, dataBuf, wcslen(dataBuf));
 
+	DeleteObject(brush);
 	ReleaseDC(g_hWnd, hdc);
 
 }

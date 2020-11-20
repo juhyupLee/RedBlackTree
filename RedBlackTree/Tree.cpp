@@ -4,7 +4,9 @@
 #include <Windows.h>
 #include "DrawingNodeObject.h"
 #include "MemoryTracer.h"
+#include "GlobalVariable.h"
 
+std::vector<DrawingNodeObject*> g_Vector;
 
 void RedBlackTree::TraverseNPrint(Node* node)
 {
@@ -30,14 +32,20 @@ void RedBlackTree::TraverseNPrint2(Node* node, int x, int y, int parentX, int pa
     }
 
     DrawingNodeObject* pObject = new DrawingNodeObject(x, y, node->data, parentX,parentY,node);
-    
-    //delete pObject;
+   
+    //g_Vector.push_back(pObject);
+
+    delete pObject;
 
     width = (int)(width * 0.5);
-    height +=(int)( height * 0.1);
+    height +=(int)( height * 0.05);
         
     TraverseNPrint2(node->left, x - width, y + height, x,y, width, height);
     TraverseNPrint2(node->right, x + width, y + height, x, y, width, height);
+
+    //TraverseNPrint2(node->left, x - (x/2), y + (y / 2), x,y, width, height);
+    //TraverseNPrint2(node->right, x + (x/ 2), y + (y / 2), x, y, width, height);
+
 }
 
 void RedBlackTree::TraverseNRelease(Node* node)
@@ -103,7 +111,7 @@ bool RedBlackTree::InsertNode(int data)
                     }
                     else
                     {
-                        BalanceTree(curNode, LEFT);
+                        BalanceInsertTree(curNode, LEFT);
                     }
 
                    
@@ -135,7 +143,7 @@ bool RedBlackTree::InsertNode(int data)
                     }
                     else
                     {
-                        BalanceTree(curNode, RIGHT);
+                        BalanceInsertTree(curNode, RIGHT);
                     }
                 }
             }
@@ -152,10 +160,10 @@ bool RedBlackTree::InsertNode(int data)
     return true;
 }
 
-//void RedBlackTree::DeleteNode(int data)
-//{
-//    TraverseDelete(m_RootNode, nullptr, data);
-//}
+void RedBlackTree::DeleteNode(int data)
+{
+    TraverseDelete(m_RootNode, nullptr, data);
+}
 
 bool RedBlackTree::RotateLeft(Node* node)
 {
@@ -268,10 +276,10 @@ void RedBlackTree::Print()
     TraverseNPrint(m_RootNode);
 }
 
-void RedBlackTree::PrintTree()
+void RedBlackTree::PrintTree(int32_t x, int32_t y)
 {
 
-    TraverseNPrint2(m_RootNode,750,50,0,0,400,60);
+    TraverseNPrint2(m_RootNode,750+x,50+y,0,0,800,50);
 
 }
 
@@ -281,7 +289,7 @@ void RedBlackTree::TestRotate()
     RotateRight(m_RootNode->left);
 }
 
-bool RedBlackTree::BalanceTree(Node* node,int direction)
+bool RedBlackTree::BalanceInsertTree(Node* node,int direction)
 {
     if (node == m_RootNode)
     {
@@ -313,7 +321,7 @@ bool RedBlackTree::BalanceTree(Node* node,int direction)
         uncle->color = NODE_COLOR::BLACK;
         grandParent->color = NODE_COLOR::RED;
 
-        BalanceTree(grandParent, direction);
+        BalanceInsertTree(grandParent, direction);
     }
     else
     {
@@ -329,6 +337,122 @@ bool RedBlackTree::BalanceTree(Node* node,int direction)
     }
 
     return false;
+}
+
+bool RedBlackTree::BalanceDeleteTree(Node* node)
+{
+    if (node->color == NODE_COLOR::RED)
+    {
+        node->color = NODE_COLOR::BLACK;
+        return true;
+    }
+    if (node == m_RootNode)
+    {
+        node->color = NODE_COLOR::BLACK;
+        return true;
+    }
+    else
+    {
+        Node* sibling = nullptr;
+        Node* parent = node->parent;
+        int direction = 0;
+
+        if (parent->left == node)
+        {
+            sibling = parent->right;
+            direction = LEFT;
+        }
+        else if (parent->right == node)
+        {
+            sibling = parent->left;
+            direction = RIGHT;
+        }
+
+        if (direction == LEFT)
+        {
+            //-------------------------------------------------------
+            // 형제 노드가 레드인경우 --> 답이 없음.
+            // 형제노드를 블랙으로 만들어줘야함.
+            //-------------------------------------------------------
+            if (sibling->color == NODE_COLOR::RED)
+            {
+                RotateLeft(parent);
+                sibling->color = NODE_COLOR::BLACK;
+                parent->color = NODE_COLOR::RED;
+                BalanceDeleteTree(node);
+            }
+            else if (sibling->color == NODE_COLOR::BLACK &&
+                sibling->left->color == NODE_COLOR::BLACK &&
+                sibling->right->color == NODE_COLOR::BLACK)
+            {
+
+                sibling->color = NODE_COLOR::RED;
+                BalanceDeleteTree(parent);
+            }
+            //-------------------------------------------------------
+            // 형제노드가,블랙이고 그 왼쪽자식이 레드인경우--> 회전시켜서 6번으로만들어야함
+            //-------------------------------------------------------
+            else if (sibling->color == NODE_COLOR::BLACK &&
+                sibling->left->color == NODE_COLOR::RED)
+            {
+                RotateRight(sibling);
+                parent->right->color = NODE_COLOR::BLACK;
+                parent->right->right->color = NODE_COLOR::RED;
+                BalanceDeleteTree(node);
+            }
+            else if (sibling->color == NODE_COLOR::BLACK &&
+                sibling->right->color == NODE_COLOR::RED)
+            {
+                RotateLeft(parent);
+                sibling->color = parent->color;
+                parent->color = NODE_COLOR::BLACK;
+                sibling->right->color = NODE_COLOR::BLACK;
+            }
+        }
+        else
+        {
+             //-------------------------------------------------------
+             // 형제 노드가 레드인경우 --> 답이 없음.
+             // 형제노드를 블랙으로 만들어줘야함.
+             //-------------------------------------------------------
+            if (sibling->color == NODE_COLOR::RED)
+            {
+                RotateRight(parent);
+                sibling->color = NODE_COLOR::BLACK;
+                parent->color = NODE_COLOR::RED;
+                BalanceDeleteTree(node);
+            }
+            else if (sibling->color == NODE_COLOR::BLACK &&
+                sibling->left->color == NODE_COLOR::BLACK &&
+                sibling->right->color == NODE_COLOR::BLACK)
+            {
+
+                sibling->color = NODE_COLOR::RED;
+                BalanceDeleteTree(parent);
+            }
+            //-------------------------------------------------------
+            // 형제노드가,블랙이고 그 왼쪽자식이 레드인경우--> 회전시켜서 6번으로만들어야함
+            //-------------------------------------------------------
+            else if (sibling->color == NODE_COLOR::BLACK &&
+                sibling->right->color == NODE_COLOR::RED)
+            {
+                RotateRight(sibling);
+                parent->left->color = NODE_COLOR::BLACK;
+                parent->left->left->color = NODE_COLOR::RED;
+                BalanceDeleteTree(node);
+            }
+            else if (sibling->color == NODE_COLOR::BLACK &&
+                sibling->left->color == NODE_COLOR::RED)
+            {
+                RotateRight(parent);
+                sibling->color = parent->color;
+                parent->color = NODE_COLOR::BLACK;
+                sibling->left->color = NODE_COLOR::BLACK;
+            }
+        }
+   
+    }
+    return true;
 }
 
 bool RedBlackTree::BlackUncleProcess(Node* node, int direction)
@@ -376,101 +500,160 @@ bool RedBlackTree::BlackUncleProcess(Node* node, int direction)
     return true;
 }
 
-//void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
-//{
-//    if (node == nullptr)
-//    {
-//        return;
-//    }
-//    if (node->data == data)
-//    {
-//        //---------------------------------------------------------------
-//        // 자식 노드가 없는경우
-//        //---------------------------------------------------------------
-//        if (node->left == nullptr && node->right == nullptr)
-//        {
-//            if (parent->left == node)
-//            {
-//                parent->left = nullptr;
-//            }
-//            else if (parent->right == node)
-//            {
-//                parent->right = nullptr;
-//            }
-//            delete node;
-//            return;
-//        }
-//
-//        //---------------------------------------------------------------
-//        // 자식노드가 하나만 있는 경우
-//        //---------------------------------------------------------------
-//        else if ((node->left == nullptr&& node->right != nullptr )|| (node->left != nullptr && node->right == nullptr))
-//        {
-//            //---------------------------------------------------------------
-//            // 지워야될 노드를 실제로 지우는게 아니라, 그 자식노드의 데이터를 옮기고
-//            // 자식도 옮긴다음 그 자식노드를 지워버린다.
-//            //---------------------------------------------------------------
-//            Node* childNode = nullptr;
-//
-//            if (node->left != nullptr)
-//            {
-//                childNode = node->left;
-//            }
-//            else if (node->right != nullptr)
-//            {
-//                childNode = node->right;
-//            }
-//            node->data = childNode->data;
-//            node->left = childNode->left;
-//            node->right = childNode->right;
-//
-//            delete childNode;
-//            return;
-//        }
-//        //---------------------------------------------------------------
-//        // 자식노드가 둘인 경우
-//        //---------------------------------------------------------------
-//        else if (node->left != nullptr && node->right != nullptr)
-//        {
-//            //---------------------------------------------------------------
-//            // 지워야 될노드의 자식중 오른쪽을 선택해서 그 오른쪽의 왼쪽 서브노드로 null이나올때까지 찾는다
-//            // 가장 왼쪽에있는 노드를 지워야될 노드의 데이터와 교환하고, 그 부모에 right를 연결한다
-//            //---------------------------------------------------------------
-//            Node* childParent = node;
-//            Node* childNode = node->right;
-//            
-//            while (childNode->left != nullptr)
-//            {
-//                childParent = childNode;
-//                childNode = childNode->left;
-//            }
-//
-//            node->data = childNode->data;
-//
-//            //---------------------------------------------------------------
-//            // 맨 좌측에있는 노드의 부모의 왼쪽에서 기원됬다면,  그 부모 왼쪽에 오른쪽을 붙이고,
-//            // 오른쪽에서 기원됬다면  오른쪽에 오른쪽을 붙인다.(루트노드일 경우 조심)
-//            //---------------------------------------------------------------
-//            if (childParent->left == childNode)
-//            {
-//                childParent->left = childNode->right;
-//            }
-//            else if (childParent->right == childNode)
-//            {
-//                childParent->right = childNode->right;
-//            }
-//
-//            delete childNode;
-//
-//            return;
-//        }
-//    }
-//    else if (node->data > data)
-//    {
-//        TraverseDelete(node->left, node, data);
-//    }
-//    else if (node->data < data)
-//    {
-//        TraverseDelete(node->right, node, data);
-//    }
-//}
+void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
+{
+    if (node == m_Nill)
+    {
+        return;
+    }
+ 
+    if (node->data > data)
+    {
+        TraverseDelete(node->left, node, data);
+    }
+    else if (node->data < data)
+    {
+        TraverseDelete(node->right, node, data);
+    }
+    else
+    {
+        Node* replaceNode = nullptr;
+        NODE_COLOR delNodeColor;
+
+        if (node->data == data)
+        {
+            //---------------------------------------------------------------
+            // 자식 노드가 없는경우
+            //---------------------------------------------------------------
+            if (node->left == m_Nill && node->right == m_Nill)
+            {
+                //-------------------------------------------------------
+                // 자식노드가없는 경우는 끝단 노드이거나, 아님 루트노드 하나남았을때인데..
+                //-------------------------------------------------------
+                if (node == m_RootNode)
+                {
+                    delete node;
+                    m_RootNode = nullptr;
+                    m_Nill->parent = nullptr;
+                    return;
+                }
+                else
+                {
+                    if (parent->left == node)
+                    {
+                        parent->left = m_Nill;
+                    }
+                    else if (parent->right == node)
+                    {
+                        parent->right = m_Nill;
+                    }
+
+                    m_Nill->parent = parent;
+                    
+                    replaceNode = m_Nill;
+                    delNodeColor = node->color;
+                    delete node;
+                }
+               
+            }
+            //---------------------------------------------------------------
+            // 자식노드가 하나만 있는 경우
+            //---------------------------------------------------------------
+            else if ((node->left == m_Nill && node->right != m_Nill) || (node->left != m_Nill && node->right == m_Nill))
+            {
+                //---------------------------------------------------------------
+                // 지워야될 노드를 실제로 지우는게 아니라, 그 자식노드의 데이터를 옮기고
+                // 자식도 옮긴다음 그 자식노드를 지워버린다.
+                //---------------------------------------------------------------
+
+                Node* childNode = nullptr;
+                Node* parent = node->parent;
+
+                //-----------------------------
+                // Child노드 찾아내기
+                //-----------------------------
+                if (node->left != m_Nill)
+                {
+                    childNode = node->left;
+                }
+                else if (node->right != m_Nill)
+                {
+                    childNode = node->right;
+                }
+   
+
+                //-----------------------------
+                // Child노드  <------------>노드의 부모 연결
+                //-----------------------------
+                childNode->parent = parent;
+
+                //-----------------------------
+                // 노드가 부모의 레프트였다면, 차일드노드를 레프트로연결
+                // 그반대는 라이트로 연결
+                //-----------------------------
+                if (parent->left == node)
+                {
+                    parent->left = childNode;
+                }
+                else if (parent->right == node)
+                {
+                    parent->right = childNode;
+                }
+                
+                replaceNode = childNode;
+                delNodeColor = node->color;
+
+                delete node;
+            }
+            //---------------------------------------------------------------
+            // 자식노드가 둘인 경우
+            //---------------------------------------------------------------
+            else if (node->left != m_Nill && node->right != m_Nill)
+            {
+                //---------------------------------------------------------------
+                // 지워야 될노드의 자식중 오른쪽을 선택해서 그 오른쪽의 왼쪽 서브노드로 null이나올때까지 찾는다
+                // 가장 왼쪽에있는 노드를 지워야될 노드의 데이터와 교환하고, 그 부모에 right를 연결한다
+                //---------------------------------------------------------------
+                Node* childNode = node->right;
+
+                while (childNode->left != m_Nill)
+                {
+                    childNode = childNode->left;
+                }
+
+                node->data = childNode->data;
+
+                //---------------------------------------------------------------
+                // 맨 좌측에있는 노드의 부모의 왼쪽에서 기원됬다면,  그 부모 왼쪽에 오른쪽을 붙이고,
+                // 오른쪽에서 기원됬다면  오른쪽에 오른쪽을 붙인다.(루트노드일 경우 조심)
+                //---------------------------------------------------------------
+
+                Node* childParent = childNode->parent;
+
+                if (childParent->left == childNode)
+                {
+                    childParent->left = childNode->right;
+                }
+                else if (childParent->right == childNode)
+                {
+                    childParent->right = childNode->right;
+                }
+
+                childNode->right->parent = childParent;
+
+                replaceNode = childNode->right;
+                delNodeColor = childNode->color;
+
+                delete childNode;
+            }
+            if (delNodeColor == NODE_COLOR::RED)
+            {
+                return;
+            }
+            else
+            {
+                BalanceDeleteTree(replaceNode);
+            }
+        }
+    }
+}

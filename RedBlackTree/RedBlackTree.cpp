@@ -7,9 +7,13 @@
 #include "GlobalVariable.h"
 #include <iostream>
 #include "Tree.h"
+#include "LogManager.h"
+#include <process.h>
+
+
 
 #define MAX_LOADSTRING 100
-#define ARRAY_SIZE 20
+#define ARRAY_SIZE 40
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -22,9 +26,12 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
+unsigned int WINAPI InputThread(LPVOID lParam);
 
 HWND g_hWnd;
-
+int32_t g_ScreenX=0;
+int32_t g_ScreenY = 0;
+RedBlackTree g_Tree;
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -71,28 +78,52 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         arr[randIndex2] = temp;
     }
     // 기본 메시지 루프입니다:
-    while (GetMessage(&msg, nullptr, 0, 0))
+
+
+    for (size_t i = 0; i < ARRAY_SIZE; i++)
     {
-        
+        if (arr[i] == 11)
+        {
+            int a = 10;
+        }
+        g_Tree.InsertNode(arr[i]);
+    }
+
+    //g_Tree.InsertNode(50);
+    //g_Tree.InsertNode(30);
+    //g_Tree.InsertNode(90);
+    //g_Tree.InsertNode(15);
+    //g_Tree.InsertNode(40);
+    //g_Tree.InsertNode(60);
+    //g_Tree.InsertNode(70);
+    //g_Tree.InsertNode(80);
+    //g_Tree.InsertNode(20);
+    //g_Tree.InsertNode(77);
+    //g_Tree.InsertNode(67);
+    //g_Tree.InsertNode(42);
+    //g_Tree.InsertNode(11);
+
+
+    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, InputThread, NULL, 0, NULL);
+
+    InvalidateRect(g_hWnd, NULL, TRUE);
+    while (true)//(GetMessage(&msg, nullptr, 0, 0))
+    {
+        if (PeekMessage(&msg, g_hWnd, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT)
+            {
+                break;
+            }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        
-            if (bFirst)
-            {
-                bFirst = false;
-                RedBlackTree Tree;
 
-                for (size_t i = 0; i < ARRAY_SIZE; i++)
-                {
-                    if (arr[i] == 11)
-                    {
-                        int a = 10;
-                    }
-                    Tree.InsertNode(arr[i]);
-                }
-     
-                Tree.PrintTree();
-            }
+        }
+        else
+        {
+           
+        }
+       
     }
 
     return (int) msg.wParam;
@@ -170,6 +201,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+
+    case WM_KEYDOWN:
+        if (wParam == VK_RIGHT)
+        {
+            g_ScreenX+=5;
+        }
+        if (wParam == VK_LEFT)
+        {
+            g_ScreenX-=5;
+        }
+        InvalidateRect(hWnd, NULL, TRUE);
+      
+        break;
+        
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -191,6 +236,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
+            WCHAR buf[128];
+            wsprintf(buf, L"X:%d, Y: %d", g_ScreenX, g_ScreenY);
+            TextOut(hdc, 100, 50, buf, wcslen(buf));
+            g_Tree.PrintTree(g_ScreenX, g_ScreenY);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
             EndPaint(hWnd, &ps);
         }
@@ -222,4 +271,27 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+unsigned int __stdcall InputThread(LPVOID lParam)
+{
+    int result = 0;
+    int insertOrDelete = 0;
+
+    while (true)
+    {
+        CLogManager::GetInstance()->InputDeleteOrInsert(&insertOrDelete,&result);
+
+        switch (insertOrDelete)
+        {
+        case 1:
+            g_Tree.InsertNode(result);
+            break;
+        case 2:
+            g_Tree.DeleteNode(result);
+            break;
+        }
+        InvalidateRect(g_hWnd, NULL, TRUE);
+    }
+    return 0;
 }
