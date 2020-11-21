@@ -9,7 +9,7 @@
 #include "Tree.h"
 #include "LogManager.h"
 #include <process.h>
-
+#include <time.h>
 
 
 #define MAX_LOADSTRING 100
@@ -61,7 +61,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     int arr[ARRAY_SIZE];
     int size = 20;
-    srand(10);
+    srand((unsigned int)time(NULL));
 
     for (size_t i = 0; i < ARRAY_SIZE; i++)
     {
@@ -80,14 +80,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // 기본 메시지 루프입니다:
 
 
-    for (size_t i = 0; i < ARRAY_SIZE; i++)
-    {
-        if (arr[i] == 11)
-        {
-            int a = 10;
-        }
-        g_Tree.InsertNode(arr[i]);
-    }
+    //for (size_t i = 0; i < ARRAY_SIZE; i++)
+    //{
+    //    if (arr[i] == 11)
+    //    {
+    //        int a = 10;
+    //    }
+    //    g_Tree.InsertNode(arr[i]);
+    //}
 
     //g_Tree.InsertNode(50);
     //g_Tree.InsertNode(30);
@@ -203,13 +203,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 
     case WM_KEYDOWN:
-        if (wParam == VK_RIGHT)
-        {
-            g_ScreenX+=5;
-        }
         if (wParam == VK_LEFT)
         {
-            g_ScreenX-=5;
+            g_ScreenX+=10;
+        }
+        if (wParam ==VK_RIGHT)
+        {
+            g_ScreenX-=10;
+        }
+        if (wParam == VK_SPACE)
+        {
+            g_Tree.InsertNode(rand() % 1000);
+        }
+        if (wParam == 'D')
+        {
+            g_Tree.DeleteNode(rand() % 1000);
         }
         InvalidateRect(hWnd, NULL, TRUE);
       
@@ -237,9 +245,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             WCHAR buf[128];
-            wsprintf(buf, L"X:%d, Y: %d", g_ScreenX, g_ScreenY);
-            TextOut(hdc, 100, 50, buf, wcslen(buf));
+           
             g_Tree.PrintTree(g_ScreenX, g_ScreenY);
+            wsprintf(buf, L"Max Black:%d", g_Tree.GetBlackNum());
+            TextOut(hdc, 100, 50, buf, wcslen(buf));
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
             EndPaint(hWnd, &ps);
         }

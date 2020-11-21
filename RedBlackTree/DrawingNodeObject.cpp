@@ -5,7 +5,7 @@
 #include "DrawingNodeObject.h"
 
 #include "GlobalVariable.h"
-
+#include <time.h>
 
 
 

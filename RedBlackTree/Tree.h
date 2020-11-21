@@ -24,7 +24,12 @@ public:
 	RedBlackTree()
 		:m_RootNode(nullptr),
 		m_NodeCount(0),
-		m_Nill(nullptr)
+		m_Nill(nullptr),
+		m_Depth(0),
+		m_Height(0),
+		m_Width(0),
+		m_MaxBlackNum(0),
+		m_bFirst(false)
 	{
 		m_Nill = new Node;
 		m_Nill->color = NODE_COLOR::BLACK;
@@ -53,14 +58,25 @@ public:
 
 	void TestRotate();
 	void TraverseDelete(Node* node, Node* parent, int data);
+
+	void DepthCheck(Node* node,int32_t depth);
+	void BlackCheck(Node* node, int32_t blackNum);
+
+	int32_t GetBlackNum();
 private:
 	bool BalanceInsertTree(Node* node,int direction);
 	bool BalanceDeleteTree(Node* node);
 	bool BlackUncleProcess(Node* node, int direction);
 private:
+	int32_t m_Width;
+	int32_t m_Height;
+	int32_t m_Depth;
+	int32_t m_MaxBlackNum;
 	Node* m_RootNode;
 	int32_t m_NodeCount;
 	Node* m_Nill;
+	bool m_bFirst;
+
 
 
 };

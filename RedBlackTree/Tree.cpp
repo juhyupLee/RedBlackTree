@@ -5,6 +5,7 @@
 #include "DrawingNodeObject.h"
 #include "MemoryTracer.h"
 #include "GlobalVariable.h"
+#include <cassert>
 
 std::vector<DrawingNodeObject*> g_Vector;
 
@@ -33,7 +34,6 @@ void RedBlackTree::TraverseNPrint2(Node* node, int x, int y, int parentX, int pa
 
     DrawingNodeObject* pObject = new DrawingNodeObject(x, y, node->data, parentX,parentY,node);
    
-    //g_Vector.push_back(pObject);
 
     delete pObject;
 
@@ -42,9 +42,6 @@ void RedBlackTree::TraverseNPrint2(Node* node, int x, int y, int parentX, int pa
         
     TraverseNPrint2(node->left, x - width, y + height, x,y, width, height);
     TraverseNPrint2(node->right, x + width, y + height, x, y, width, height);
-
-    //TraverseNPrint2(node->left, x - (x/2), y + (y / 2), x,y, width, height);
-    //TraverseNPrint2(node->right, x + (x/ 2), y + (y / 2), x, y, width, height);
 
 }
 
@@ -278,9 +275,20 @@ void RedBlackTree::Print()
 
 void RedBlackTree::PrintTree(int32_t x, int32_t y)
 {
-
-    TraverseNPrint2(m_RootNode,750+x,50+y,0,0,800,50);
-
+    m_Depth = 0;
+    m_MaxBlackNum = 0;
+    DepthCheck(m_RootNode,0);
+    m_bFirst = true;
+    BlackCheck(m_RootNode, 0);
+    int a = m_Depth;
+    
+    int width = 100;
+    for (int i = 0; i < m_Depth; ++i)
+    {
+        width += width * 0.55;
+    }
+    TraverseNPrint2(m_RootNode,750+x,50+y,0,0, width,40);
+  
 }
 
 void RedBlackTree::TestRotate()
@@ -398,6 +406,10 @@ bool RedBlackTree::BalanceDeleteTree(Node* node)
                 RotateRight(sibling);
                 parent->right->color = NODE_COLOR::BLACK;
                 parent->right->right->color = NODE_COLOR::RED;
+                if (node == m_Nill)
+                {
+                    node->parent = parent;
+                }
                 BalanceDeleteTree(node);
             }
             else if (sibling->color == NODE_COLOR::BLACK &&
@@ -436,9 +448,14 @@ bool RedBlackTree::BalanceDeleteTree(Node* node)
             else if (sibling->color == NODE_COLOR::BLACK &&
                 sibling->right->color == NODE_COLOR::RED)
             {
-                RotateRight(sibling);
+                RotateLeft(sibling);
                 parent->left->color = NODE_COLOR::BLACK;
                 parent->left->left->color = NODE_COLOR::RED;
+
+                if (node == m_Nill)
+                {
+                    node->parent = parent;
+                }
                 BalanceDeleteTree(node);
             }
             else if (sibling->color == NODE_COLOR::BLACK &&
@@ -502,6 +519,10 @@ bool RedBlackTree::BlackUncleProcess(Node* node, int direction)
 
 void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
 {
+    if (node == nullptr)
+    {
+        return;
+    }
     if (node == m_Nill)
     {
         return;
@@ -581,7 +602,6 @@ void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
                     childNode = node->right;
                 }
    
-
                 //-----------------------------
                 // Child노드  <------------>노드의 부모 연결
                 //-----------------------------
@@ -591,15 +611,21 @@ void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
                 // 노드가 부모의 레프트였다면, 차일드노드를 레프트로연결
                 // 그반대는 라이트로 연결
                 //-----------------------------
-                if (parent->left == node)
+                if (parent == nullptr)
                 {
-                    parent->left = childNode;
+                    m_RootNode = childNode;
                 }
-                else if (parent->right == node)
+                else
                 {
-                    parent->right = childNode;
+                    if (parent->left == node)
+                    {
+                        parent->left = childNode;
+                    }
+                    else if (parent->right == node)
+                    {
+                        parent->right = childNode;
+                    }
                 }
-                
                 replaceNode = childNode;
                 delNodeColor = node->color;
 
@@ -614,11 +640,11 @@ void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
                 // 지워야 될노드의 자식중 오른쪽을 선택해서 그 오른쪽의 왼쪽 서브노드로 null이나올때까지 찾는다
                 // 가장 왼쪽에있는 노드를 지워야될 노드의 데이터와 교환하고, 그 부모에 right를 연결한다
                 //---------------------------------------------------------------
-                Node* childNode = node->right;
+                Node* childNode = node->left;
 
-                while (childNode->left != m_Nill)
+                while (childNode->right != m_Nill)
                 {
-                    childNode = childNode->left;
+                    childNode = childNode->right;
                 }
 
                 node->data = childNode->data;
@@ -632,20 +658,60 @@ void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
 
                 if (childParent->left == childNode)
                 {
-                    childParent->left = childNode->right;
+                    childParent->left = childNode->left;
                 }
                 else if (childParent->right == childNode)
                 {
-                    childParent->right = childNode->right;
+                    childParent->right = childNode->left;
                 }
 
-                childNode->right->parent = childParent;
+                childNode->left->parent = childParent;
 
-                replaceNode = childNode->right;
+                replaceNode = childNode->left;
+                replaceNode->parent = childParent;
                 delNodeColor = childNode->color;
 
                 delete childNode;
             }
+            //else if (node->left != m_Nill && node->right != m_Nill)
+            //{
+            //    //---------------------------------------------------------------
+            //    // 지워야 될노드의 자식중 오른쪽을 선택해서 그 오른쪽의 왼쪽 서브노드로 null이나올때까지 찾는다
+            //    // 가장 왼쪽에있는 노드를 지워야될 노드의 데이터와 교환하고, 그 부모에 right를 연결한다
+            //    //---------------------------------------------------------------
+            //    Node* childNode = node->right;
+
+            //    while (childNode->left != m_Nill)
+            //    {
+            //        childNode = childNode->left;
+            //    }
+
+            //    node->data = childNode->data;
+
+            //    //---------------------------------------------------------------
+            //    // 맨 좌측에있는 노드의 부모의 왼쪽에서 기원됬다면,  그 부모 왼쪽에 오른쪽을 붙이고,
+            //    // 오른쪽에서 기원됬다면  오른쪽에 오른쪽을 붙인다.(루트노드일 경우 조심)
+            //    //---------------------------------------------------------------
+
+            //    Node* childParent = childNode->parent;
+
+            //    if (childParent->left == childNode)
+            //    {
+            //        childParent->left = childNode->right;
+            //    }
+            //    else if (childParent->right == childNode)
+            //    {
+            //        childParent->right = childNode->right;
+            //    }
+
+            //    childNode->right->parent = childParent;
+
+            //    replaceNode = childNode->right;
+            //    replaceNode->parent = childParent;
+            //    delNodeColor = childNode->color;
+
+            //    delete childNode;
+            //}
             if (delNodeColor == NODE_COLOR::RED)
             {
                 return;
@@ -656,4 +722,61 @@ void RedBlackTree::TraverseDelete(Node* node,Node* parent, int data)
             }
         }
     }
+}
+
+void RedBlackTree::DepthCheck(Node* node, int32_t depth)
+{
+    if (node == nullptr)
+    {
+        if (m_Depth < depth)
+        {
+            m_Depth = depth;
+        }
+        return;
+    }
+    if (node == m_Nill)
+    {
+        if (m_Depth < depth)
+        {
+            m_Depth = depth;
+        }
+        return;
+    }
+    ++depth;
+    DepthCheck(node->left, depth);
+    DepthCheck(node->right, depth);
+}
+
+void RedBlackTree::BlackCheck(Node* node, int32_t blackNum)
+{
+    if (node == nullptr)
+    {
+        return;
+    }
+    if (node == m_Nill)
+    {
+      
+        if (m_bFirst)
+        {
+            m_bFirst = false;
+            if (m_MaxBlackNum < blackNum)
+            {
+                m_MaxBlackNum = blackNum;
+            }
+        }
+        assert(m_MaxBlackNum == blackNum);
+       
+        return;
+    }
+    if (node->color == NODE_COLOR::BLACK)
+    {
+        blackNum++;
+    }
+    BlackCheck(node->left, blackNum);
+    BlackCheck(node->right, blackNum);
+}
+
+int32_t RedBlackTree::GetBlackNum()
+{
+    return m_MaxBlackNum;
 }
