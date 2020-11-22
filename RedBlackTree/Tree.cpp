@@ -11,14 +11,13 @@ std::vector<DrawingNodeObject*> g_Vector;
 
 void RedBlackTree::TraverseNPrint(Node* node)
 {
-    if (node == nullptr)
+    if (node == m_Nill)
     {
         return;
     }
     TraverseNPrint(node->left);
     wprintf(L"%d\n", node->data);
     TraverseNPrint(node->right);
-    
 }
 
 void RedBlackTree::TraverseNPrint2(Node* node, int x, int y, int parentX, int parentY, int width, int height)

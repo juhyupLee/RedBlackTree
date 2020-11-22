@@ -88,6 +88,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     //    }
     //    g_Tree.InsertNode(arr[i]);
     //}
+    //g_Tree.Print();
 
     //g_Tree.InsertNode(50);
     //g_Tree.InsertNode(30);
@@ -205,19 +206,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
         if (wParam == VK_LEFT)
         {
-            g_ScreenX+=10;
+            g_ScreenX+=20;
         }
         if (wParam ==VK_RIGHT)
         {
-            g_ScreenX-=10;
+            g_ScreenX-=20;
         }
         if (wParam == VK_SPACE)
         {
-            g_Tree.InsertNode(rand() % 1000);
+            g_Tree.InsertNode(rand() % 100);
         }
         if (wParam == 'D')
         {
-            g_Tree.DeleteNode(rand() % 1000);
+            g_Tree.DeleteNode(rand() % 100);
         }
         InvalidateRect(hWnd, NULL, TRUE);
       
